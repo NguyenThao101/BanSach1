@@ -22,6 +22,12 @@ namespace BanSach.Components.Services
             await db.SaveChangesAsync();
             return Product_cart; 
         }
+        public async Task<Product_cart> UpdateCart(Product_cart Product_cart)
+        {
+            db.Product_carts.Update(Product_cart);
+            await db.SaveChangesAsync();
+            return Product_cart;
+        }
 
         public async Task DeletePCart(Product_cart Product_cart)
         {

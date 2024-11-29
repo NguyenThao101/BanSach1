@@ -8,6 +8,7 @@
         public string? Publisher { get; set; }
         public string? ProductName { get; set; }
         public int CategoryId { get; set; }
+       
         public int CostPrice { get; set; }
         public string? Description { get; set; }
         public int SellPrice { get; set; }

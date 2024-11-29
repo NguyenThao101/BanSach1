@@ -1,5 +1,9 @@
 ﻿using BanSach.Components.Model;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Specialized;
+using System.Collections;
+using System.Data;
 namespace BanSach.Components.Data
 {
     public class AppDbContext : DbContext
@@ -70,7 +74,24 @@ namespace BanSach.Components.Data
                 .HasKey(m => m.ProductBillId);
             modelBuilder.Entity<Product_bill>()
                 .Property(m => m.ProductBillId)
-                .ValueGeneratedOnAdd();
+              .ValueGeneratedOnAdd();
+           // modelBuilder.Entity<Bill>()
+           //.HasOne(b => b.User)
+           //.WithMany(u => u.Bills)
+           //.HasForeignKey(b => b.UserId)
+           //.OnDelete(DeleteBehavior.Cascade);  // Tùy chọn: xác định hành vi khi xóa
+
+           // modelBuilder.Entity<Bill>()
+           //     .HasOne(b => b.Address)
+           //     .WithMany(a => a.Bills)
+           //     .HasForeignKey(b => b.AddressId)
+           //     .OnDelete(DeleteBehavior.Restrict);  // Ví dụ: Cấm xóa khi có hóa đơn liên quan
+
+           // modelBuilder.Entity<Bill>()
+           //     .HasOne(b => b.Delivery)
+           //     .WithMany(d => d.Bills)
+           //     .HasForeignKey(b => b.DeliveryId)
+           //     .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Product_cart>()
                 .HasKey(m => m.CartId);
@@ -102,7 +123,7 @@ namespace BanSach.Components.Data
                 .Property(m => m.UserId)
                 .ValueGeneratedOnAdd();
 
-        }
     }
+}
 }
 

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BanSach.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20241030193707_v1")]
-    partial class v1
+    [Migration("20241128033552_a2")]
+    partial class a2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -51,9 +51,6 @@ namespace BanSach.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<string>("WardId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("AddressId");
 
                     b.ToTable("Address");
@@ -88,10 +85,16 @@ namespace BanSach.Migrations
                     b.Property<int>("TotalPrice")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("Updated_at")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("BillId");
+
+                    b.HasIndex("AddressId");
+
+                    b.HasIndex("DeliveryId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Bill");
                 });
@@ -268,6 +271,9 @@ namespace BanSach.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductId"));
 
+                    b.Property<string>("Author")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
@@ -283,7 +289,13 @@ namespace BanSach.Migrations
                     b.Property<string>("Img")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("PageNumber")
+                        .HasColumnType("int");
+
                     b.Property<string>("ProductName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Publisher")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Quatity")
@@ -294,6 +306,9 @@ namespace BanSach.Migrations
 
                     b.Property<DateTime?>("Updated")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
 
                     b.HasKey("ProductId");
 
@@ -323,9 +338,6 @@ namespace BanSach.Migrations
                     b.Property<int>("Quatity")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("Updated")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("ProductBillId");
 
                     b.ToTable("Product_bills");
@@ -342,7 +354,7 @@ namespace BanSach.Migrations
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("FeaturePId")
+                    b.Property<int>("ProductId")
                         .HasColumnType("int");
 
                     b.Property<int>("Quatity")
@@ -350,9 +362,6 @@ namespace BanSach.Migrations
 
                     b.Property<DateTime>("Updated")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
 
                     b.HasKey("CartId");
 
@@ -367,14 +376,8 @@ namespace BanSach.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
 
-                    b.Property<DateTime?>("Created")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("RoleName")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("Updated")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("RoleId");
 
@@ -420,9 +423,6 @@ namespace BanSach.Migrations
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Img")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Password")
                         .HasColumnType("nvarchar(max)");
 
@@ -432,18 +432,63 @@ namespace BanSach.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("Updated")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserName")
+                    b.Property<string>("Username")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("img")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("status")
+                        .HasColumnType("int");
 
                     b.HasKey("UserId");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("BanSach.Components.Model.Bill", b =>
+                {
+                    b.HasOne("BanSach.Components.Model.Address", "Address")
+                        .WithMany("Bills")
+                        .HasForeignKey("AddressId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BanSach.Components.Model.Delivery", "Delivery")
+                        .WithMany("Bills")
+                        .HasForeignKey("DeliveryId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired();
+
+                    b.HasOne("BanSach.Components.Model.User", "User")
+                        .WithMany("Bills")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Address");
+
+                    b.Navigation("Delivery");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BanSach.Components.Model.Address", b =>
+                {
+                    b.Navigation("Bills");
+                });
+
+            modelBuilder.Entity("BanSach.Components.Model.Delivery", b =>
+                {
+                    b.Navigation("Bills");
+                });
+
+            modelBuilder.Entity("BanSach.Components.Model.User", b =>
+                {
+                    b.Navigation("Bills");
                 });
 #pragma warning restore 612, 618
         }

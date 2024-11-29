@@ -8,5 +8,6 @@ namespace BanSach.Components.IService
         Task<List<Product_cart>> GetAllPCart();
         Task<Product_cart> CreatePCart(Product_cart Product_cart);
         Task DeletePCart(Product_cart Product_cart);
+        Task<Product_cart> UpdateCart(Product_cart Product_cart);
     }
 }

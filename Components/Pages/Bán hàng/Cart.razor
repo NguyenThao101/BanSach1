@@ -1,0 +1,88 @@
+﻿@page "/cart"
+@using BanSach.Components.Model
+@using BanSach.Components.Services
+@using BanSach.Components.IService
+@using System.Globalization
+@inject IItemManagement ItemManagement
+@inject ICartService CartService
+@inject NavigationManager navigationManager
+<MudContainer Style="margin-top:20px">
+        @if (product_carts != null && product_carts.Any())
+        {
+            <MudGrid >
+                @foreach (var item in product_carts)
+                {
+                    // Lấy thông tin sản phẩm tương ứng với productId trong giỏ hàng
+                    var product = products.FirstOrDefault(p => p.ProductId == item.ProductId);
+
+                    @if (product != null)
+                    {
+                        <MudGrid Class="pt-2" Style=" display: flex;">
+                   
+                            <MudItem xs="12" sm="12" md="2">
+                                <MudImage ObjectFit="ObjectFit.Cover" Width="150" Height="150" Src="@product.Img" Class="rounded-lg" />
+                            </MudItem>
+                            <MudItem xs="12" sm="12" md="10">
+                                <div style="padding: 15px;">
+                                    <div style="font-weight:bold;">@product.ProductName</div>
+                                   
+                                    <div style="font-weight:bold; padding-top: 10px;">
+                                        @string.Format(new CultureInfo("vi-VN"), "{0:N0}", product.SellPrice) vnđ
+                                    </div>
+                                    <div style="display: flex; align-items: center;">
+                                        <span style="margin-right: 10px;">Số lượng:</span>
+                                        <MudNumericField T="int" @bind-Value="@item.Quatity" Min="0" Style="width: 60px;" />
+                                    </div>
+                                    <div style="margin-top: 10px;">
+                                        <MudButton Class="pt-1" Style="padding:10px" ButtonType="ButtonType.Submit" Variant="Variant.Filled">Mua hàng</MudButton>
+                                    </div>
+                                </div>
+                            </MudItem>
+                        </MudGrid>
+                    }
+                }
+            </MudGrid>
+        }
+        else
+        {
+            <MudGrid Class="pt-4" Justify="Justify.Center" AlignItems="AlignItems.Center">
+                <MudItem xs="12">
+                    <MudText Style="font-size:1.5em; font-family: Arial; margin-top:50px" Align="Align.Center">Giỏ hàng trống.</MudText>
+                </MudItem>
+            </MudGrid>
+        }
+</MudContainer>
+@code {
+    private int productId;
+    private List<Product> products = new List<Product>(); 
+    private List<Product_cart> product_carts = new List<Product_cart>(); 
+
+    // Lấy tất cả sản phẩm trong giỏ hàng
+    private async Task<List<Product_cart>> GetAllProductCart() => await CartService.GetAllPCart();
+    private async Task<List<Product>> GetAllProducts() => await ItemManagement.GetAllItem();
+
+    // Phương thức xử lý khi người dùng nhấn "Mua hàng"
+    // private async Task AddToCart(Product_cart item)
+    // {
+    //     // Thực hiện hành động thêm vào giỏ hàng
+    //     await CartService.AddToCart(item);
+    //     navigationManager.NavigateTo("/checkout"); // Chuyển đến trang thanh toán
+    // }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Lấy danh sách giỏ hàng
+            product_carts = await GetAllProductCart();
+
+            // Lấy danh sách sản phẩm từ cơ sở dữ liệu
+            products = await GetAllProducts();
+        }
+        catch (Exception ex)
+        {
+            // Xử lý lỗi và hiển thị thông báo
+            Console.WriteLine("Lỗi khi tải dữ liệu: " + ex.Message);
+        }
+    }
+}

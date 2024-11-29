@@ -1,0 +1,250 @@
+﻿@page "/test"
+@inject ISnackbar Snackbar
+
+<MudStack Style="width: 100%">
+    <!-- Thông báo lỗi nếu phát hiện ảnh trùng lặp -->
+    @if (_isDuplicateDetected)
+
+    {
+        <MudAlert Severity="Severity.Warning">Tệp đã tồn tại trong danh sách!</MudAlert>
+    }
+
+    <!-- Khu vực kéo và thả để tải lên file -->
+    <MudFileUpload T="IReadOnlyList<IBrowserFile>"
+                   @ref="_fileUpload"
+                   OnFilesChanged="OnInputFileChanged"
+                   AppendMultipleFiles="true"
+                   Hidden="false"
+                   MaxAllowedSize="10485760"
+                   InputClass="absolute mud-width-full mud-height-full overflow-hidden z-10"
+                   InputStyle="opacity:0"
+                   tabindex="-1"
+                   @ondrop="ClearDragClass"
+                   @ondragenter="SetDragClass"
+                   @ondragleave="ClearDragClass"
+                   @ondragend="ClearDragClass">
+        <ActivatorContent>
+            <MudPaper Height="300px" Outlined="true" Class="_dragClass">
+                <MudText Typo="Typo.h6">
+                    Kéo và thả tệp vào đây hoặc nhấp vào
+                </MudText>
+            </MudPaper>
+        </ActivatorContent>
+    </MudFileUpload>
+
+    <!-- Khu vực hiển thị các ảnh đã tải lên -->
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
+        @foreach (var (file, index) in _uploadedFiles.Select((f, i) => (f, i)))
+
+        {
+            <div style="position: relative; display: inline-block;">
+                <img src="@file.Url" style="max-height: 100px; max-width: 100px; border: 1px solid #ccc; padding: 5px;" />
+                <!-- Nút "X" để xóa ảnh -->
+                <MudButton Color="Color.Error"
+                           Variant="Variant.Filled"
+                           Style="position: absolute; top: 2px; right: 2px; padding: 0; font-size: 0.65rem; width: 18px; height: 18px; line-height: 1; display: flex; align-items: center; justify-content: center;"
+                           OnClick="(() => RemoveImage(index))">
+                    X
+                </MudButton>
+            </div>
+        }
+    </div>
+
+    <!-- Thanh công cụ cho các hành động quản lý tệp -->
+    <MudToolBar Gutters="false" Class="relative d-flex justify-end gap-4">
+        <MudButton Color="Color.Primary"
+                   OnClick="OpenFilePickerAsync"
+                   Variant="Variant.Filled">
+            Mở trình chọn tệp
+        </MudButton>
+        <MudButton Color="Color.Primary"
+                   Disabled="@(!_uploadedFiles.Any())"
+                   OnClick="Upload"
+                   Variant="Variant.Filled">
+            Tải lên
+        </MudButton>
+        <MudButton Color="Color.Error"
+                   Disabled="@(!_uploadedFiles.Any())"
+                   OnClick="ClearAsync"
+                   Variant="Variant.Filled">
+            Xóa tất cả
+        </MudButton>
+    </MudToolBar>
+</MudStack>
+
+@code {
+#nullable enable
+    private const string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full";
+
+
+
+    private string _dragClass = DefaultDragClass;
+
+    private bool _isDuplicateDetected = false;
+
+    private MudFileUpload<IReadOnlyList<IBrowserFile>>? _fileUpload;
+
+
+
+    // Danh sách lưu trữ file đã tải lên
+
+    private readonly List<UploadedFile> _uploadedFiles = new();
+
+
+
+    private async Task ClearAsync()
+
+    {
+
+        // Xóa toàn bộ danh sách file
+
+        await (_fileUpload?.ClearAsync() ?? Task.CompletedTask);
+
+        _uploadedFiles.Clear();
+
+        _isDuplicateDetected = false;
+
+        ClearDragClass();
+
+        StateHasChanged();
+
+    }
+
+
+
+    private Task OpenFilePickerAsync() => _fileUpload?.OpenFilePickerAsync() ?? Task.CompletedTask;
+
+
+
+    private async void OnInputFileChanged(InputFileChangeEventArgs e)
+
+    {
+
+        ClearDragClass();
+
+        var files = e.GetMultipleFiles();
+
+        _isDuplicateDetected = false;
+
+
+
+        foreach (var file in files)
+
+        {
+
+            // Kiểm tra filePath trùng lặp
+
+            if (_uploadedFiles.Any(f => f.Name == file.Name))
+
+            {
+
+                _isDuplicateDetected = true;
+
+                Snackbar.Add($"Tệp '{file.Name}' đã tồn tại.", Severity.Warning);
+
+                continue;
+
+            }
+
+
+
+            // Kiểm tra kích thước file
+
+            if (file.Size > 10 * 1024 * 1024)
+
+            {
+
+                Snackbar.Add("File quá lớn. Kích thước tối đa cho phép là 10 MB.", Severity.Error);
+
+                continue;
+
+            }
+
+
+
+            // Đọc dữ liệu file và tạo URL base64
+
+            var buffer = new byte[file.Size];
+
+            await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).ReadAsync(buffer);
+
+            var base64String = Convert.ToBase64String(buffer);
+
+            var imageUrl = $"data:{file.ContentType};base64,{base64String}";
+
+
+
+            // Thêm file vào danh sách
+
+            _uploadedFiles.Add(new UploadedFile
+
+                {
+
+                    Name = file.Name,
+
+                    Url = imageUrl
+
+                });
+
+        }
+
+
+
+        StateHasChanged();
+
+    }
+
+
+
+    private void Upload()
+
+    {
+
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+
+        Snackbar.Add("Tải lên thành công", Severity.Success);
+
+    }
+
+
+
+    private void RemoveImage(int index)
+
+    {
+
+        if (index >= 0 && index < _uploadedFiles.Count)
+
+        {
+
+            _uploadedFiles.RemoveAt(index);
+
+            Snackbar.Add("Đã xóa ảnh.", Severity.Info);
+
+            StateHasChanged();
+
+        }
+
+    }
+
+
+
+    private void SetDragClass() => _dragClass = $"{DefaultDragClass} mud-border-primary";
+
+
+
+    private void ClearDragClass() => _dragClass = DefaultDragClass;
+
+
+
+    // Class lưu trữ thông tin file tải lên
+
+    private class UploadedFile
+
+    {
+
+        public string Name { get; set; } = string.Empty;
+
+        public string Url { get; set; } = string.Empty;
+
+    }
+}
